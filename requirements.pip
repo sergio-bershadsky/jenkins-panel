@@ -1,0 +1,15 @@
+flask-admin
+flask-babelex
+flask-collect
+flask-pymongo
+flask-script
+flask-wtf
+
+gunicorn
+
+lxml
+wdb
+wdb.server
+
+python-jenkins
+requests
