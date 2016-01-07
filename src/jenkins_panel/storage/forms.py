@@ -13,6 +13,12 @@ from jenkins_panel import config
 client = jenkins.Jenkins(config.JENKINS_SERVER_URI)
 
 
+class JenkinsViewChoices(object):
+
+    def __iter__(self):
+        return ((item['name'], item['name']) for item in ([{'name': ''}] + client.get_views()) if 'all' not in item['name'].lower())
+
+
 class JenkinsParentChoices(object):
 
     def __iter__(self):
@@ -126,25 +132,30 @@ def jenkins_form_factory(*args, **kwargs):
     attributes = dict\
         ( signature = fields.HiddenField\
             ()
+        , view = fields.SelectField\
+            ( u'вид'
+            , choices=JenkinsViewChoices()
+            , default=None
+            )
         , parent = InlineFieldList\
             ( InlineFormField
               ( ParentForm
               )
-            , label=u'Унаследовать от'
-            , description=u'Порядок наследования важен'
+            , label=u'родители'
+            , description=u'порядок наследования важен'
             , validators=
               [ validators.DataRequired()
               , ]
             )
         , node = fields.SelectField\
-            ( u'Собирать на'
+            ( u'узлы'
             , choices=JenkinsNodeChoices()
             , validators=
               [ validators.DataRequired()
               , ]
             )
         , config = fields.StringField\
-            ( u'Конечный конфиг'
+            ( u'конечный конфиг'
             , widget=ReadonlyTextArea()
         )   )
 
@@ -187,13 +198,15 @@ class JobForm(form.Form):
             self.name.widget = ReadonlyTextInput()
 
     def validate(self):
+
+
         result = super(JobForm, self).validate()
         if not result:
             return result
 
         jenkins_form = self.jenkins.form
-        parent_xml_config = get_config(jenkins_form)
-        parent_config_tree = etree.fromstring(parent_xml_config)
+        parent_config_xml = get_config(jenkins_form)
+        parent_config_tree = etree.fromstring(parent_config_xml)
 
         # Enable
         disabled = parent_config_tree.find('disabled')
@@ -251,4 +264,29 @@ class JobForm(form.Form):
             client.reconfig_job(name, final_config)
 
         self.jenkins.config.data = final_config
+
+        # Add to view
+        view = self.data['jenkins']['view']
+        if view:
+            view_config_xml = client.get_view_config(view).encode('utf-8')
+            view_config_tree = etree.fromstring(view_config_xml)
+
+            view_jobs = set()
+            for item in view_config_tree.findall('jobNames/string'):
+                view_jobs.add(item.text)
+                item.getparent().remove(item)
+
+            if name not in view_jobs:
+                view_jobs.add(name)
+                view_jobs = list(sorted(view_jobs))
+                job_names_tree = view_config_tree.find('jobNames')
+                for job_name in view_jobs:
+                    record_tree = etree.SubElement(job_names_tree, 'string')
+                    record_tree.text = job_name
+
+                client.reconfig_view(view, etree.tostring(view_config_tree))
+
+            #wdb.set_trace()
+            #for item in view_config_tree.findall('jobames/string'):
+
         return result
