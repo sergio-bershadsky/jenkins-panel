@@ -36,10 +36,9 @@ with app.app_context():
         , name=u"Jenkins panel"
         , template_mode="bootstrap3"
         , base_template="jenkins_panel/master.html"
-        #, index_view=AuthView(url='/')
+        , url='/'
         )
 
     admin.add_view\
         ( JobAdminView()
         )
-
