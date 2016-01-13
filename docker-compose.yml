@@ -13,8 +13,3 @@ service-jenkins-panel:
     - service-jenkins-panel-mongo:mongo
 service-jenkins-panel-mongo:
   image: mongo
-  environment:
-   - MYSQL_ROOT_PASSWORD=root
-   - MYSQL_USER=user
-   - MYSQL_PASSWORD=password
-   - MYSQL_DATABASE=jenkins_panel

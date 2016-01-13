@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$DEBUG" ]; then
-    gunicorn jenkins_panel.app -b 0.0.0.0:80
+    gunicorn jenkins_panel.app:app -b 0.0.0.0:80
 else
     if [ "$USE_WDB" != "0" ]; then
         wdb.server.py &
