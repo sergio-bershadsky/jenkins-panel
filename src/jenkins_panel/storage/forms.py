@@ -198,8 +198,6 @@ class JobForm(form.Form):
             self.name.widget = ReadonlyTextInput()
 
     def validate(self):
-
-
         result = super(JobForm, self).validate()
         if not result:
             return result
@@ -257,6 +255,12 @@ class JobForm(form.Form):
             raise ValidationError(e.message)
 
         final_config = etree.tostring(parent_config_tree)
+
+        # replace placeholders
+        for k, v in (self.jenkins.data.get('param') or {}).iteritems():
+            if not v:
+                continue
+            final_config = final_config.replace('${%s}' % k, v)
 
         if not test_name:
             client.create_job(name, final_config)
