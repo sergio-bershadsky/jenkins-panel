@@ -22,7 +22,7 @@ class JenkinsViewChoices(object):
 class JenkinsParentChoices(object):
 
     def __iter__(self):
-        return ((item['name'], item['name']) for item in client.get_jobs() if 'template' in item['name'])
+        return ((item['name'], item['name']) for item in client.get_jobs() if item['name'].startswith('template'))
 
 
 class JenkinsNodeChoices(object):
