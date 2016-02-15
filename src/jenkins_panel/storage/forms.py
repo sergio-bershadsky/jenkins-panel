@@ -51,6 +51,10 @@ class ParentForm(form.Form):
         ( choices=JenkinsParentChoices()
         )
 
+    def __init__(self, *args, **kwargs):
+        kwargs['csrf_enabled'] = False
+        super(ParentForm, self).__init__(*args, **kwargs)
+
 
 def get_config(form_instance):
     if not form_instance.parent.data:
@@ -125,6 +129,11 @@ def jenkins_param_form_factory(form_instance):
             kwargs['choices'] = field['choices']
         attributes[field['name']] = getattr(fields, field['type'])(**kwargs)
 
+    def __init__(self, *args, **kwargs):
+        kwargs['csrf_enabled'] = False
+        super(self.__class__, self).__init__(*args, **kwargs)
+    attributes['__init__'] = __init__
+
     return type('Form', (form.Form, ), attributes)
 
 
@@ -166,6 +175,7 @@ def jenkins_form_factory(*args, **kwargs):
             , u'Параметры'
             )
 
+    kwargs['csrf_enabled'] = False
     return type('Form', (form.Form, ), attributes)(*args, **kwargs)
 
 

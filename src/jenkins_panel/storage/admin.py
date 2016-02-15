@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+import logging
+
 import wdb
 import jenkins
 
 from bson.objectid import ObjectId
-from flask import redirect, url_for, flash
-from flask.ext.admin import expose
+from flask import redirect, url_for, flash, request
+from flask_admin import expose
+from flask_admin.actions import action
+from werkzeug.datastructures import MultiDict
 from wtforms.widgets import HTMLString
 from jenkins_panel import config
 
@@ -46,3 +50,20 @@ class JobAdminView(BaseModelView):
         info = client.get_job_info(name)
         flash(HTMLString(u'Сборка "%s" запущена <a href="%s" target="_blank">подробнее</a>' % (name, info.get('url'))))
         return redirect(url_for('.index_view'))
+
+    # TODO
+    @action('update', 'Update')
+    def action_approve(self, ids):
+        for model_id in ids:
+            model = self.get_one(model_id)
+            form_class = self.get_form()
+            form = form_class\
+                ( MultiDict()
+                , csrf_enabled=False
+                , **model
+                )
+            if self.validate_form(form):
+                if self.update_model(form, model):
+                    flash('Record %s was successfully saved.' % model_id)
+            else:
+                flash(form.errors, 'error')
